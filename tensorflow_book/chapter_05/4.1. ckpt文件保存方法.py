@@ -13,3 +13,15 @@ with tf.Session() as sess:
     sess.run(init_op)
 
     saver.save(sess, 'Saved_model/model.ckpt')
+
+
+# 加载模型
+
+with tf.Session() as sess:
+    saver.restore(sess,'Saved_model/model.ckpt')
+    print(sess.run(result))
+    print(sess.run(v1))
+    print(sess.run(v2))
+
+
+    
