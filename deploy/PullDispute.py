@@ -2,7 +2,7 @@
 # -*- coding:UTF-8 -*-
 # Auther DongJie.Han
 
-import sys,os;
+import sys, os;
 import threading;
 import pymysql;
 from DB import RedisConnect;
@@ -38,7 +38,7 @@ class GetDisputesTask(threading.Thread):
         if self.siteId is not None:
             strCmd += self.siteId;
 
-        os.system( strCmd );
+        os.system(strCmd);
 
 
 '''
@@ -74,7 +74,10 @@ class SaveDisputesTask(threading.Thread):
         strCmd += " >> " + strLogFile + " &";
         '''
 
-        os.system( strCmd );
+        # os.system( strCmd );
+
+        print("php run")
+
 
 '''
 异步多线程将dispute第一次更新失败的数据从redis中写入到mysql数据库
@@ -99,7 +102,8 @@ class UpdateFailedCaseTask(threading.Thread):
             open(strLogFile, 'w+');
 
         strCmd = "php artisan disputes update_failed_case >> " + strLogFile + " &";
-        os.system( strCmd );
+        os.system(strCmd);
+
 
 '''
 开始拉取列表相关数据
@@ -135,99 +139,6 @@ class GetDisputesList:
             arrSites = [{'site_id': int(sys.argv[1])}];
         else:
             arrSites = self.getCfgPaypalSites()
-
-        # arrSites = [{'site_id': 1},
-        #             {'site_id': 2},
-        #             {'site_id': 3},
-        #             {'site_id': 4},
-        #             {'site_id': 5},
-        #             {'site_id': 6},
-        #             {'site_id': 7},
-        #             {'site_id': 8},
-        #             {'site_id': 9},
-        #             {'site_id': 10},
-        #             {'site_id': 11},
-        #             {'site_id': 12},
-        #             {'site_id': 13},
-        #             {'site_id': 14},
-        #             {'site_id': 15},
-        #             {'site_id': 16},
-        #             {'site_id': 17},
-        #             {'site_id': 18},
-        #             {'site_id': 19},
-        #             {'site_id': 20},
-        #             {'site_id': 21},
-        #             {'site_id': 22},
-        #             {'site_id': 23},
-        #             {'site_id': 24},
-        #             {'site_id': 25},
-        #             {'site_id': 26},
-        #             {'site_id': 27},
-        #             {'site_id': 28},
-        #             {'site_id': 29},
-        #             {'site_id': 30},
-        #             {'site_id': 31},
-        #             {'site_id': 32},
-        #             {'site_id': 33},
-        #             {'site_id': 34},
-        #             {'site_id': 35},
-        #             {'site_id': 36},
-        #             {'site_id': 37},
-        #             {'site_id': 38},
-        #             {'site_id': 39},
-        #             {'site_id': 40},
-        #             {'site_id': 41},
-        #             {'site_id': 42},
-        #             {'site_id': 43},
-        #             {'site_id': 44},
-        #             {'site_id': 45},
-        #             {'site_id': 46},
-        #             {'site_id': 47},
-        #             {'site_id': 48},
-        #             {'site_id': 49},
-        #             {'site_id': 50},
-        #             {'site_id': 51},
-        #             {'site_id': 52},
-        #             {'site_id': 53},
-        #             {'site_id': 54},
-        #             {'site_id': 55},
-        #             {'site_id': 56},
-        #             {'site_id': 57},
-        #             {'site_id': 59},
-        #             {'site_id': 60},
-        #             {'site_id': 61},
-        #             {'site_id': 62},
-        #             {'site_id': 63},
-        #             {'site_id': 64},
-        #             {'site_id': 65},
-        #             {'site_id': 66},
-        #             {'site_id': 67},
-        #             {'site_id': 68},
-        #             {'site_id': 69},
-        #             {'site_id': 70},
-        #             {'site_id': 71},
-        #             {'site_id': 72},
-        #             {'site_id': 73},
-        #             {'site_id': 74},
-        #             {'site_id': 75},
-        #             {'site_id': 76},
-        #             {'site_id': 77},
-        #             {'site_id': 78},
-        #             {'site_id': 79},
-        #             {'site_id': 80},
-        #             {'site_id': 81},
-        #             {'site_id': 82},
-        #             {'site_id': 83},
-        #             {'site_id': 84},
-        #             {'site_id': 85},
-        #             {'site_id': 86},
-        #             {'site_id': 87},
-        #             {'site_id': 88},
-        #             {'site_id': 89},
-        #             {'site_id': 90},
-        #             {'site_id': 91},
-        #             {'site_id': 92}
-        #             ]
 
         # 获取redise 链接
         redisConn = RedisConnect().getConn();
@@ -275,6 +186,7 @@ class GetDisputesList:
             get_disputes['get_disputes_thread_' + str(i + 1)].join()
 
         print("pull disputes list .....主线程退出")
+
 
 '''
 执行从redis写入到mysql数据库
@@ -348,16 +260,34 @@ class DisputeToDB:
         self.redisConn.delete('pf_already_update_to_db_disputes');
 
         # todo fix 这儿会起来非常多的线程
-
+        iMaxNum = 30
+        temp_alives = []
         if iThreadNums > 0:
             for i in range(iThreadNums):
-                save_disputes['save_disputes_thread_' + str(i + 1)] = SaveDisputesTask((i + 1),
-                                                                                       "save_disputes_thread_" + str(
-                                                                                           i + 1), iSiteId);
-                save_disputes['save_disputes_thread_' + str(i + 1)].start();
+                # less 30 inert into temp_alives
+                if len(temp_alives) < iMaxNum:
+                    t = SaveDisputesTask((i + 1), "save_disputes_thread_" + str(i + 1), iSiteId)
+                    save_disputes['save_disputes_thread_' + str(i + 1)] = t
+                    t.start()
+                    temp_alives.append(t)
+                else:
+                    temwhile = True
+                    while True:
+                        if temwhile is False:
+                            break
+                        for temp in range(len(temp_alives)):
+                            if temp_alives[temp].is_alive() is False:
+                                temp_alives.pop(temp)
+                                t = SaveDisputesTask((i + 1), "save_disputes_thread_" + str(i + 1), iSiteId)
+                                save_disputes['save_disputes_thread_' + str(i + 1)] = t
+                                t.start()
+                                temp_alives.append(t)
+                                temwhile = False
+                                break
+            # print("all thread",len(get_disputes))
 
             for i in range(iThreadNums):
-                save_disputes['save_disputes_thread_' + str(i + 1)].join();
+                save_disputes['save_disputes_thread_' + str(i + 1)].join()
 
         # The latest update time
         self.fillUpdateTime(sid);
@@ -368,6 +298,6 @@ class DisputeToDB:
 
 if __name__ == '__main__':
     # 执行拉取列表的任务
-    GetDisputesList().execGetDisputes();
+    # GetDisputesList().execGetDisputes();
     # 将redis中的列表数据取出写入到mysqlDB
     DisputeToDB().execDisputeToDB();
