@@ -2,9 +2,9 @@
 # -*- coding:UTF-8 -*-
 # Auther DongJie.Han
 
-import sys, os;
+import sys,os;
 import threading;
-# import pymysql;
+import pymysql;
 from DB import RedisConnect;
 from DB import SqlCons;
 from GetWorkDir import GetCurrentWorkDir;
@@ -32,20 +32,13 @@ class GetDisputesTask(threading.Thread):
         self.siteId = str(iSiteId);
 
     def run(self):
-        # os.chdir(GetCurrentWorkDir().getDir());
+        os.chdir(GetCurrentWorkDir().getDir());
         strCmd = "php artisan disputes start_dispute_service ";
-        print("site id :",self.siteId)
+
         if self.siteId is not None:
             strCmd += self.siteId;
 
-
-        print("执行php 代码")
-
-        system = os.system("ping www.baidu.com")
-
-        print("返回码",system)
-
-        # os.system(strCmd);
+        os.system( strCmd );
 
 
 '''
@@ -81,11 +74,7 @@ class SaveDisputesTask(threading.Thread):
         strCmd += " >> " + strLogFile + " &";
         '''
 
-        # todo 如果有siteID 会走这个方法，  str 为 php artisan disputes save_dispute_service  siteID
-        # os.system(strCmd);
-
-        print("执行php")
-
+        os.system( strCmd );
 
 '''
 异步多线程将dispute第一次更新失败的数据从redis中写入到mysql数据库
@@ -110,10 +99,7 @@ class UpdateFailedCaseTask(threading.Thread):
             open(strLogFile, 'w+');
 
         strCmd = "php artisan disputes update_failed_case >> " + strLogFile + " &";
-        # os.system(strCmd);
-
-        print("执行php")
-
+        os.system( strCmd );
 
 '''
 开始拉取列表相关数据
@@ -143,163 +129,152 @@ class GetDisputesList:
     def execGetDisputes(self, iSiteId=None):
         get_disputes = {};
 
-        # todo
+        if iSiteId is not None:
+            arrSites = [{'site_id': int(iSiteId)}];
+        elif len(sys.argv) > 1 and sys.argv[1] is not None and int(sys.argv[1]) > 0:
+            arrSites = [{'site_id': int(sys.argv[1])}];
+        else:
+            arrSites = self.getCfgPaypalSites()
 
-        # iSiteId = 123
-
-        # if iSiteId is not None:
-        #     arrSites = [{'site_id': int(iSiteId)}];
-        # elif len(sys.argv) > 1 and sys.argv[1] is not None and int(sys.argv[1]) > 0:
-        #     arrSites = [{'site_id': int(sys.argv[1])}];
-        # else:
-        #     arrSites = self.getCfgPaypalSites()
-
-        arrSites= [{'site_id':1},
-                   {'site_id': 2},
-                   {'site_id': 3},
-                   {'site_id': 4},
-                   {'site_id': 5},
-                   {'site_id': 6},
-                   {'site_id': 7},
-                   {'site_id': 8},
-                   {'site_id': 9},
-                   {'site_id': 10},
-                   {'site_id': 11},
-                   {'site_id': 12},
-                   {'site_id': 13},
-                   {'site_id': 14},
-                   {'site_id': 15},
-                   {'site_id': 16},
-                   {'site_id': 17},
-                   {'site_id': 18},
-                   {'site_id': 19},
-                   {'site_id': 20},
-                   {'site_id': 21},
-                   {'site_id': 22},
-                   {'site_id': 23},
-                   {'site_id': 24},
-                   {'site_id': 25},
-                   {'site_id': 26},
-                   {'site_id': 27},
-                   {'site_id': 28},
-                   {'site_id': 29},
-                   {'site_id': 30},
-                   {'site_id': 31},
-                   {'site_id': 32},
-                   {'site_id': 33},
-                   {'site_id': 34},
-                   {'site_id': 35},
-                   {'site_id': 36},
-                   {'site_id': 37},
-                   {'site_id': 38},
-                   {'site_id': 39},
-                   {'site_id': 40},
-                   {'site_id': 41},
-                   {'site_id': 42},
-                   {'site_id': 43},
-                   {'site_id': 44},
-                   {'site_id': 45},
-                   {'site_id': 46},
-                   {'site_id': 47},
-                   {'site_id': 48},
-                   {'site_id': 49},
-                   {'site_id': 50},
-                   {'site_id': 51},
-                   {'site_id': 52},
-                   {'site_id': 53},
-                   {'site_id': 54},
-                   {'site_id': 55},
-                   {'site_id': 56},
-                   {'site_id': 57},
-                   {'site_id': 59},
-                   {'site_id': 60},
-                   {'site_id': 61},
-                   {'site_id': 62},
-                   {'site_id': 63},
-                   {'site_id': 64},
-                   {'site_id': 65},
-                   {'site_id': 66},
-                   {'site_id': 67},
-                   {'site_id': 68},
-                   {'site_id': 69},
-                   {'site_id': 70},
-                   {'site_id': 71},
-                   {'site_id': 72},
-                   {'site_id': 73},
-                   {'site_id': 74},
-                   {'site_id': 75},
-                   {'site_id': 76},
-                   {'site_id': 77},
-                   {'site_id': 78},
-                   {'site_id': 79},
-                   {'site_id': 80},
-                   {'site_id': 81},
-                   {'site_id': 82},
-                   {'site_id': 83},
-                   {'site_id': 84},
-                   {'site_id': 85},
-                   {'site_id': 86},
-                   {'site_id': 87},
-                   {'site_id': 88},
-                   {'site_id': 89},
-                   {'site_id': 90},
-                   {'site_id': 91},
-                   {'site_id': 92}
-                   ]
-
+        # arrSites = [{'site_id': 1},
+        #             {'site_id': 2},
+        #             {'site_id': 3},
+        #             {'site_id': 4},
+        #             {'site_id': 5},
+        #             {'site_id': 6},
+        #             {'site_id': 7},
+        #             {'site_id': 8},
+        #             {'site_id': 9},
+        #             {'site_id': 10},
+        #             {'site_id': 11},
+        #             {'site_id': 12},
+        #             {'site_id': 13},
+        #             {'site_id': 14},
+        #             {'site_id': 15},
+        #             {'site_id': 16},
+        #             {'site_id': 17},
+        #             {'site_id': 18},
+        #             {'site_id': 19},
+        #             {'site_id': 20},
+        #             {'site_id': 21},
+        #             {'site_id': 22},
+        #             {'site_id': 23},
+        #             {'site_id': 24},
+        #             {'site_id': 25},
+        #             {'site_id': 26},
+        #             {'site_id': 27},
+        #             {'site_id': 28},
+        #             {'site_id': 29},
+        #             {'site_id': 30},
+        #             {'site_id': 31},
+        #             {'site_id': 32},
+        #             {'site_id': 33},
+        #             {'site_id': 34},
+        #             {'site_id': 35},
+        #             {'site_id': 36},
+        #             {'site_id': 37},
+        #             {'site_id': 38},
+        #             {'site_id': 39},
+        #             {'site_id': 40},
+        #             {'site_id': 41},
+        #             {'site_id': 42},
+        #             {'site_id': 43},
+        #             {'site_id': 44},
+        #             {'site_id': 45},
+        #             {'site_id': 46},
+        #             {'site_id': 47},
+        #             {'site_id': 48},
+        #             {'site_id': 49},
+        #             {'site_id': 50},
+        #             {'site_id': 51},
+        #             {'site_id': 52},
+        #             {'site_id': 53},
+        #             {'site_id': 54},
+        #             {'site_id': 55},
+        #             {'site_id': 56},
+        #             {'site_id': 57},
+        #             {'site_id': 59},
+        #             {'site_id': 60},
+        #             {'site_id': 61},
+        #             {'site_id': 62},
+        #             {'site_id': 63},
+        #             {'site_id': 64},
+        #             {'site_id': 65},
+        #             {'site_id': 66},
+        #             {'site_id': 67},
+        #             {'site_id': 68},
+        #             {'site_id': 69},
+        #             {'site_id': 70},
+        #             {'site_id': 71},
+        #             {'site_id': 72},
+        #             {'site_id': 73},
+        #             {'site_id': 74},
+        #             {'site_id': 75},
+        #             {'site_id': 76},
+        #             {'site_id': 77},
+        #             {'site_id': 78},
+        #             {'site_id': 79},
+        #             {'site_id': 80},
+        #             {'site_id': 81},
+        #             {'site_id': 82},
+        #             {'site_id': 83},
+        #             {'site_id': 84},
+        #             {'site_id': 85},
+        #             {'site_id': 86},
+        #             {'site_id': 87},
+        #             {'site_id': 88},
+        #             {'site_id': 89},
+        #             {'site_id': 90},
+        #             {'site_id': 91},
+        #             {'site_id': 92}
+        #             ]
 
         # 获取redise 链接
-        # redisConn = RedisConnect().getConn();
+        redisConn = RedisConnect().getConn();
 
+        redisConn.delete('pf_already_insert_to_redis_disputes');
 
-        # redisConn.delete('pf_already_insert_to_redis_disputes');
-
-
-       ## todo 研究这个##############################################################################################################################
+        ## todo 研究这个##############################################################################################################################
 
         iMaxNum = 30;  # 一次启动的最大线程数
 
-        #todo 核对是否启动的最大线程数是30
+        # todo 核对是否启动的最大线程数是30
 
-        if len(arrSites) > 0:
+        temp_alives = []
 
-            if (len(arrSites) % iMaxNum) == 0:
-                ill = len(arrSites) / iMaxNum;
+        for i in range(len(arrSites)):
+            # less 30 inert into temp_alives
+            if (len(temp_alives) < iMaxNum):
+                t = GetDisputesTask((i + 1), "get_disputes_thread_" + str(i + 1), arrSites[i]['site_id'])
+                get_disputes['get_disputes_thread_' + str(i + 1)] = t
+                t.start()
+                # alive = t.is_alive()
+                temp_alives.append(t)
             else:
-                ill = ceil(len(arrSites) / iMaxNum);
+                temwhile = True
+                while True:
+                    # sleep(1)  # sleep 1s
 
-            for j in range(ill):
-                if len(arrSites) >= iMaxNum:
-                    threadLen = iMaxNum;
-                else:
-                    threadLen = len(arrSites);
+                    if temwhile is False:
+                        break;
 
+                    for temp in range(len(temp_alives)):
+                        if temp_alives[temp].is_alive() is False:
+                            temp_alives.pop(temp)
+                            t = GetDisputesTask((i + 1), "get_disputes_thread_" + str(i + 1),
+                                                arrSites[i]['site_id'])
+                            get_disputes['get_disputes_thread_' + str(i + 1)] = t
+                            t.start()
+                            temp_alives.append(t)
+                            temwhile = False
+                            break
+        # print("all thread",len(get_disputes))
 
-                  # todo bug 1 这儿站点和循环不匹配，跳站点弹出，
-                for i in range(threadLen):
-                    print("index",i)
-                    t= GetDisputesTask((i + 1),"get_disputes_thread_" + str(i + 1),arrSites[i]['site_id']);
-                    t.start();
+        for i in range(len(get_disputes)):
+            # print("join")
+            get_disputes['get_disputes_thread_' + str(i + 1)].join()
 
-                    alive = t.is_alive()
-
-                    print("启动的线程的转态",alive)
-
-                    get_disputes['get_disputes_thread_' + str(i + 1)] = t
-
-
-                    arrSites.pop(i);
-
-            # todo 如果线程已经结束了。join 呢？
-
-                for i in range(threadLen):
-                    get_disputes['get_disputes_thread_' + str(i + 1)].join();
-
-        print("pull disputes list 主线程退出");
-
-
-## todo 研究这个##############################################################################################################################
-
+        print("pull disputes list .....主线程退出")
 
 '''
 执行从redis写入到mysql数据库
