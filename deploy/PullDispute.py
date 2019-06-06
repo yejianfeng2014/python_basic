@@ -145,8 +145,6 @@ class GetDisputesList:
 
         redisConn.delete('pf_already_insert_to_redis_disputes');
 
-        ## todo 研究这个##############################################################################################################################
-
         iMaxNum = 30;  # 一次启动的最大线程数
 
         # todo 核对是否启动的最大线程数是30
@@ -218,12 +216,52 @@ class DisputeToDB:
         update_failed_case = {};
         self.redisConn.delete('pf_failed_dispute_cnt');
 
+        # for i in range(iTNums):
+        #     update_failed_case['update_failed_case_thread_' + str(i + 1)] = UpdateFailedCaseTask((i + 1),
+        #                                                                                          "update_failed_case_thread_" + str(
+        #                                                                                              i + 1));
+        #     update_failed_case['update_failed_case_thread_' + str(i + 1)].start();
+        #     time.sleep(3);
+        iMaxNum = 30  # 一次启动的最大线程数
+
+        # todo 核对是否启动的最大线程数是30
+
+        temp_alives = []
+
         for i in range(iTNums):
-            update_failed_case['update_failed_case_thread_' + str(i + 1)] = UpdateFailedCaseTask((i + 1),
-                                                                                                 "update_failed_case_thread_" + str(
-                                                                                                     i + 1));
-            update_failed_case['update_failed_case_thread_' + str(i + 1)].start();
-            time.sleep(3);
+            # less 30 inert into temp_alives
+            if (len(temp_alives) < iMaxNum):
+
+                t = UpdateFailedCaseTask((i + 1),
+                                         "update_failed_case_thread_" + str(
+                                             i + 1));
+
+                update_failed_case['update_failed_case_thread_' + str(i + 1)] = t
+                t.start()
+
+                time.sleep(3)
+                # alive = t.is_alive()
+                temp_alives.append(t)
+            else:
+                temwhile = True
+                while True:
+                    # sleep(1)  # sleep 1s
+
+                    if temwhile is False:
+                        break;
+
+                    for temp in range(len(temp_alives)):
+                        if temp_alives[temp].is_alive() is False:
+                            temp_alives.pop(temp)
+                            t = UpdateFailedCaseTask((i + 1),
+                                                     "update_failed_case_thread_" + str(
+                                                         i + 1));
+
+                            update_failed_case['update_failed_case_thread_' + str(i + 1)] = t
+                            t.start()
+                            temp_alives.append(t)
+                            temwhile = False
+                            break
 
         for i in range(iTNums):
             update_failed_case['update_failed_case_thread_' + str(i + 1)].join();
@@ -298,6 +336,6 @@ class DisputeToDB:
 
 if __name__ == '__main__':
     # 执行拉取列表的任务
-    # GetDisputesList().execGetDisputes();
+    GetDisputesList().execGetDisputes();
     # 将redis中的列表数据取出写入到mysqlDB
     DisputeToDB().execDisputeToDB();

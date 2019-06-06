@@ -108,6 +108,8 @@ class CDaemon:
         if pid:
             msg = 'pid file %s already exists, is it already running?\n'
             sys.stderr.write(msg % self.pidfile);
+
+            # todo 退出程序，改为return 1
             sys.exit(1);
             
         #start the daemon

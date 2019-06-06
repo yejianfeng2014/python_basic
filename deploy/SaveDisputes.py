@@ -54,12 +54,44 @@ class DisputeToDB:
             
         iSiteId = None if len( sys.argv ) < 3 else sys.argv[1];
         redisConn.delete( 'pf_already_update_to_db_disputes' );
-        
-        if len( lKeys ) > 0:
-            for i in range( iLen ):
-                get_disputes[ 'get_disputes_thread_' + str( i + 1 ) ] = SaveDisputesTask( ( i + 1 ), "get_disputes_thread_" + str( i + 1 ), iSiteId );
-                get_disputes[ 'get_disputes_thread_' + str( i + 1 ) ].start();
-                
+        #
+        # if len( lKeys ) > 0:
+        #     for i in range( iLen ):
+        #         get_disputes[ 'get_disputes_thread_' + str( i + 1 ) ] = SaveDisputesTask( ( i + 1 ), "get_disputes_thread_" + str( i + 1 ), iSiteId );
+        #         get_disputes[ 'get_disputes_thread_' + str( i + 1 ) ].start();
+
+
+        iMaxNum = 30;  # 一次启动的最大线程数
+        temp_alives = []
+
+        if len(lKeys) > 0:
+
+            for i in range(iLen):
+                # less 30 inert into temp_alives
+                if (len(temp_alives) < iMaxNum):
+                    t = SaveDisputesTask( ( i + 1 ), "get_disputes_thread_" + str( i + 1 ), iSiteId )
+                    get_disputes[ 'get_disputes_thread_' + str( i + 1 ) ] = t
+                    t.start()
+                    # alive = t.is_alive()
+                    temp_alives.append(t)
+                else:
+                    temwhile = True
+                    while True:
+                        # sleep(1)  # sleep 1s
+
+                        if temwhile is False:
+                            break;
+
+                        for temp in range(len(temp_alives)):
+                            if temp_alives[temp].is_alive() is False:
+                                temp_alives.pop(temp)
+                                t = SaveDisputesTask((i + 1), "get_disputes_thread_" + str(i + 1), iSiteId)
+                                get_disputes['get_disputes_thread_' + str(i + 1)] = t
+                                t.start()
+                                temp_alives.append(t)
+                                temwhile = False
+                                break
+
             for i in range( iLen ):
                 get_disputes[ 'get_disputes_thread_' + str( i + 1 ) ].join();
                 
