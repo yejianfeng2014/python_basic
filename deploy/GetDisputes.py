@@ -70,11 +70,37 @@ class GetDisputesList:
         redisConn = RedisConnect().getConn();
         redisConn.delete( 'pf_already_insert_to_redis_disputes' );
 
-        if len( arrSites ) > 0:
-            for i in range( len( arrSites ) ):
-                get_disputes[ 'get_disputes_thread_' + str( i + 1 ) ] = GetDisputesTask( ( i + 1 ), "get_disputes_thread_" + str( i + 1 ), arrSites[i]['site_id'] );
-                get_disputes[ 'get_disputes_thread_' + str( i + 1 ) ].start();
-            
+        # if len( arrSites ) > 0:
+        #     for i in range( len( arrSites ) ):
+        #         get_disputes[ 'get_disputes_thread_' + str( i + 1 ) ] = GetDisputesTask( ( i + 1 ), "get_disputes_thread_" + str( i + 1 ), arrSites[i]['site_id'] );
+        #         get_disputes[ 'get_disputes_thread_' + str( i + 1 ) ].start();
+
+        iMaxNum = 30
+        temp_alives = []
+        if len(arrSites) > 0:
+            for i in range(len( arrSites )):
+                # less 30 inert into temp_alives
+                if len(temp_alives) < iMaxNum:
+                    t = GetDisputesTask( ( i + 1 ), "get_disputes_thread_" + str( i + 1 ), arrSites[i]['site_id'] )
+                    get_disputes[ 'get_disputes_thread_' + str( i + 1 ) ] = t
+                    t.start()
+                    temp_alives.append(t)
+                else:
+                    temwhile = True
+                    while True:
+                        if temwhile is False:
+                            break
+                        for temp in range(len(temp_alives)):
+                            if temp_alives[temp].is_alive() is False:
+                                temp_alives.pop(temp)
+                                t = GetDisputesTask((i + 1), "get_disputes_thread_" + str(i + 1),
+                                                    arrSites[i]['site_id'])
+                                get_disputes['get_disputes_thread_' + str(i + 1)] = t
+                                t.start()
+                                temp_alives.append(t)
+                                temwhile = False
+                                break
+
             for i in range( len( arrSites ) ):
                 get_disputes[ 'get_disputes_thread_' + str( i + 1 ) ].join();
 

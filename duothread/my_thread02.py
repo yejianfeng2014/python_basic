@@ -17,4 +17,8 @@ for i in range(100):
         # 创建并启动第二个线程
         t2 =threading.Thread(target=action,args=(100,))
         t2.start()
+
+        t2.join()
+
+        t1.join()
 print('主线程执行完成!')
